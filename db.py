@@ -1,6 +1,7 @@
+# Explicit dependencies
 import enums
 from qc import Query
-
+from val import Error
 
 # Default settings
 DATABASE_DEFAULT = 'PRT_DB'
@@ -131,19 +132,18 @@ class Table(object):
 				    .Where(['TABLE_NAME = ?', 'TABLE_SCHEMA = ?']))
 		data = q.execute([self.Name, self.schema.Name], dataBase=self.dataBase.Name)
 		print(data)
-		# Expecting PyDataset but catches val.Error type.
+		# Expecting PyDataset but catches Error type.
 		if isinstance(data, Error):
 			return data
 		return [Column(self, row[0]) for row in data]
 	    
 	def _getExtendedProperties(self):
-		from val import Error
 		# Query to retrieve the extended properties configured on the table.
 		q = (Query().Select()
 			  		.From('dbo.vTableExtendedProperties')
 			  		.Where(['TableSchema = ?', 'TableName = ?']))
 		data = q.execute([self.schema.Name, self.Name], dataBase=self.dataBase.Name)
-		# Expecting PyDataset but catches val.Error type.
+		# Expecting PyDataset but catches Error type.
 		if isinstance(data, Error):
 			return data
 		return {row['ExtendedPropertyName']: row['ExtendedPropertyValue'] 
@@ -155,11 +155,10 @@ class Table(object):
 		return q.execute(dataBase=self.dataBase.Name)
 		
 	def getRowCount(self):
-		from val import Error
 		# Get the number of rows a table currently has.
 		q = Query().Select(['COUNT(*)']).From(self.FullName)
 		data = q.execute(dataBase=self.dataBase.Name)
-		# Expecting PyDataset but catches val.Error type
+		# Expecting PyDataset but catches Error type
 		if isinstance(data, Error):
 			return data.Value
 		return data[0][0]
@@ -290,7 +289,7 @@ class Column(object):
 			 		.From('dbo.vColumnExtendedProperties')
 			 		.Where(['TableSchema = ?', 'TableName = ?', 'ColumnName = ?']))
 		data = q.execute([self.table.schema.Name, self.table.Name, self.Name], self.table.dataBase.Name)
-		# Expecting PyDataset but cathces val.Error type.
+		# Expecting PyDataset but cathces Error type.
 		if isinstance(data, Error):
 			return data.Value
 		return {data[i]['ExtendedPropertyName']: data[i]['ExtendedPropertyValue'] 
@@ -339,7 +338,7 @@ class Column(object):
 			 		.From('INFORMATION_SCHEMA.COLUMNS')
 				 	.Where(['TABLE_SCHEMA = ?', 'TABLE_NAME = ?', 'COLUMN_NAME = ?']))
 		data = q.execute([self.table.schema.Name, self.table.Name, self.Name], self.table.dataBase.Name)
-		# Expecting PyDataset but cathces val.Error type.
+		# Expecting PyDataset but cathces Error type.
 		if isinstance(data, Error):
 			return data.Value
 		return (data[0]['DATA_TYPE'], 
@@ -414,7 +413,7 @@ class Row(object):
 					.Where(['{0} = ?'.format(self.table.AutoIDColumnHeader)]))
 		data = q.execute([self.AutoID], self.table.dataBase.Name)
 		
-		# Expecting PyDataset but cathces val.Error type.
+		# Expecting PyDataset but cathces Error type.
 		if isinstance(data, Error):
 			return data.Value
 		if data:
@@ -485,7 +484,7 @@ class Row(object):
 		args = [value for value in inserts.values() 
 				if not util.isNullValue(value)]
 		result = q.execute(args, self.table.dataBase.Name)
-		# Expecting PyDataset but cathces val.Error type.
+		# Expecting PyDataset but cathces Error type.
 		if isinstance(result, Error):
 			return result.Value
 			
@@ -494,7 +493,7 @@ class Row(object):
 					.From(self.table.FullName)
 					.Where(filters=inserts))
 		data = q.execute(dataBase=self.table.dataBase.Name)
-		# Expecting PyDataset but cathces val.Error type.
+		# Expecting PyDataset but cathces Error type.
 		if isinstance(result, Error):
 			return result.Value
 		
