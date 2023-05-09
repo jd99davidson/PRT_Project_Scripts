@@ -1,20 +1,20 @@
 # Explicit dependencies
 import enums
-#import db
+from val import Error
 
 
 class Statement(object):
 	""" Parent class for all Query statement objects. """
 	
 	def __init__(self):
-		# Expecting None but catches val.Error obj
+		# Expecting None but catches Error obj
 		self._error = self._validate()		
 		
 	@property
 	def Statement(self):
 		# If there is an error return that, 
 		# else call getStatement() method.
-		if isinstance(self._error, val.Error):
+		if isinstance(self._error, Error):
 			return self._error
 		return self._getStatement()
 	
@@ -161,8 +161,8 @@ class Select(Statement):
 	    	if '.' in column:
 	    		aliased = True
 	    	if aliased and '.' not in column:
-	    		return val.Error(enums.Message.HANDLED_FAILURE.value, 
-	    						 'All columns must be aliased.')
+	    		return Error(enums.Message.HANDLED_FAILURE.value, 
+	    					 'All columns must be aliased.')
 	    		
 	    # Potential Check 2: Make sure columns exist
 	    return None
@@ -361,7 +361,7 @@ class Query(object):
 	@property
 	def Query(self):
 		self._error = self._validate()
-		if isinstance(self._error, val.Error):
+		if isinstance(self._error, Error):
 			return self._error
 		return ' '.join(obj.Statement for obj in self._statementObjs)
 		
@@ -372,7 +372,7 @@ class Query(object):
 	def _validate(self):
 		# Check 1: Make sure objects didn't return an error (assign query object child object's error)
 		for obj in self._statementObjs:
-			if isinstance(obj._error, val.Error):
+			if isinstance(obj._error, Error):
 				return obj._error
 		
 		# Check 2: Union statement returns same number of columns as parent clause.
@@ -442,15 +442,15 @@ class Query(object):
 	
 	def execute(self, args=[], dataBase='PRT_DB', NamedQuery=False):
 		# @@NEEDS_BUSINESS_LOGIC@@
-	    # NOT DONE
-	    # Validating after all the statement object methods have been 
-	    # ran on the query object.
-	    self._error = self._validate()
-	    if isinstance(self._error, val.Error):
-	    	return self._error
-	    
-	    # Unhandled failure handling.	
-	    try:
+		# NOT DONE
+		# Validating after all the statement object methods have been 
+		# ran on the query object.
+		self._error = self._validate()
+		if isinstance(self._error, Error):
+			return self._error
+		
+		# Unhandled failure handling.	
+		try:
 			if NamedQuery:
 				data = system.db.runNamedQuery('Util/Generic', {'Query': self.insertArgsIntoQuery(args),
 																'database': dataBase})
@@ -465,9 +465,9 @@ class Query(object):
 				return system.db.runPrepUpdate(self.Query, args, dataBase)
 			else:
 				return system.db.runPrepQuery(self.Query, args, dataBase)
-	    except:
-	    	return val.Error(enums.Message.UNHANDLED_FAILURE.value, 
-	    					 'Query "{0}" against {1} could not compile.'.format(self.insertArgsIntoQuery(args), dataBase))
+		except:
+			return Error(enums.Message.UNHANDLED_FAILURE.value, 
+						 'Query "{0}" against {1} could not compile.'.format(self.insertArgsIntoQuery(args), dataBase))
 	
 	def insertArgsIntoQuery(self, args):
 		# Artificial replacement of '?' with args value (does not change object Statements, 
